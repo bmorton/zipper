@@ -1,0 +1,42 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - errcheck      # Check for unchecked errors
+    - govet         # Examine Go source code and report suspicious constructs
+    - ineffassign   # Detect ineffectual assignments
+    - staticcheck   # Advanced Go linter (in v2, includes gosimple and stylecheck)
+    - unused        # Check for unused constants, variables, functions and types
+    - misspell      # Check for commonly misspelled English words
+  settings:
+    errcheck:
+      check-blank: false  # Allow blank assignment to explicitly ignore errors
+      check-type-assertions: false
+  exclusions:
+    rules:
+      # Exclude generated code from all linters
+      - path: gen/
+        linters:
+          - errcheck
+          - govet
+          - ineffassign
+          - staticcheck
+          - unused
+          - misspell
+
+formatters:
+  enable:
+    - gci
+  settings:
+    gci:
+      sections:
+        - standard # Standard section: captures all standard packages.
+        - default # Default section: contains all imports that could not be matched to another section type.
+        - prefix(github.com/bmorton/go-base) # Custom section: groups all imports with the specified Prefix.
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
