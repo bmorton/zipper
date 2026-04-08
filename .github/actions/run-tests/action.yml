@@ -1,0 +1,37 @@
+name: 'Run Go Tests'
+description: 'Run tests and generate coverage reports'
+runs:
+  using: 'composite'
+  steps:
+    - name: Run tests
+      run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+      shell: bash
+
+    - name: Generate coverage report
+      run: go tool cover -html=coverage.out -o coverage.html
+      shell: bash
+
+    - name: Display coverage summary
+      run: go tool cover -func=coverage.out
+      shell: bash
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v5
+      with:
+        name: coverage-report
+        path: |
+          coverage.out
+          coverage.html
+        retention-days: 30
+
+    - name: Check test coverage threshold
+      run: |
+        echo "Checking test coverage..."
+        total_coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+        echo "Total coverage: ${total_coverage}%"
+        if (( $(echo "$total_coverage < 50.0" | bc -l) )); then
+          echo "Warning: Test coverage is below 50%"
+        else
+          echo "Test coverage is acceptable"
+        fi
+      shell: bash

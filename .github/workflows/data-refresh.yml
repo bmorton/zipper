@@ -1,0 +1,82 @@
+name: Refresh Data
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Generate fresh data
+        run: go run ./cmd/generate --output data/zipcodes.csv.gz
+
+      - name: Check for changes
+        id: diff
+        run: |
+          if git diff --quiet data/zipcodes.csv.gz; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Test
+        if: steps.diff.outputs.changed == 'true'
+        run: go test -race -count=1 ./...
+
+      - name: Compute version
+        if: steps.diff.outputs.changed == 'true'
+        id: version
+        run: |
+          YEAR=$(date +%Y)
+          MONTH=$(date +%-m)
+          PREFIX="v0.${YEAR}.${MONTH}"
+
+          LATEST=$(git tag --list "${PREFIX}*" --sort=-v:refname | head -n1)
+
+          if [ -z "$LATEST" ]; then
+            PATCH=0
+          else
+            EXISTING_PATCH="${LATEST: -1}"
+            PATCH=$((EXISTING_PATCH + 1))
+          fi
+
+          TAG="${PREFIX}${PATCH}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Computed next tag: ${TAG}"
+
+      - name: Commit
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/zipcodes.csv.gz
+          git commit -m "data: refresh zip code data (${{ steps.version.outputs.tag }})"
+
+      - name: Tag and push
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git tag "${{ steps.version.outputs.tag }}"
+          git push origin main --tags
+
+      - name: Create release
+        if: steps.diff.outputs.changed == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          generate_release_notes: true
+          body: |
+            Automated data refresh from [GeoNames US postal codes](https://download.geonames.org/export/zip/US.zip) and [US Census ZCTA-to-Place](https://www.census.gov/geographies/reference-files/time-series/geo/relationship-files.2020.html).
+
+      - name: No changes
+        if: steps.diff.outputs.changed == 'false'
+        run: echo "Data unchanged, skipping release."

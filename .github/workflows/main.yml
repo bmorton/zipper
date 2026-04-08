@@ -1,0 +1,32 @@
+name: Main Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Set up Go
+        uses: ./.github/actions/setup-go
+      - name: Run linter
+        uses: ./.github/actions/run-lint
+
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Set up Go
+        uses: ./.github/actions/setup-go
+      - name: Run tests
+        uses: ./.github/actions/run-tests

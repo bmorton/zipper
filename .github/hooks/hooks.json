@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      {
+        "type": "command",
+        "bash": ".github/hooks/post-tool-lint.sh",
+        "comment": "Run golangci-lint --fix after file modifications"
+      }
+    ]
+  }
+}
