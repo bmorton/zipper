@@ -25,13 +25,13 @@ func ensureLoaded() {
 		if err != nil {
 			panic("zipper: failed to open embedded data: " + err.Error())
 		}
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 
 		gz, err := gzip.NewReader(f)
 		if err != nil {
 			panic("zipper: failed to create gzip reader: " + err.Error())
 		}
-		defer gz.Close()
+		defer func() { _ = gz.Close() }()
 
 		if gz.Comment != "" {
 			version = gz.Comment

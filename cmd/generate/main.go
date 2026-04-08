@@ -200,7 +200,7 @@ func download(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status: %s", resp.Status)
@@ -221,7 +221,7 @@ func parseZipArchive(data []byte) ([]record, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to open US.txt: %w", err)
 			}
-			defer rc.Close()
+			defer func() { _ = rc.Close() }()
 			return parseTSV(rc)
 		}
 	}
@@ -291,9 +291,7 @@ func parseCensusPlaces(data []byte) (map[string][]string, error) {
 	scanner := bufio.NewScanner(bytes.NewReader(data))
 
 	// Skip header
-	if scanner.Scan() {
-		// header line consumed
-	}
+	_ = scanner.Scan()
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -357,7 +355,7 @@ func writeGzippedCSV(path string, records []record) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	gw, err := gzip.NewWriterLevel(f, gzip.BestCompression)
 	if err != nil {

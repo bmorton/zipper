@@ -133,11 +133,11 @@ func infoAction(c *cli.Context) error {
 
 func printEntries(entries []zipper.Entry) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "ZIP\tCITY\tSTATE\tLAT\tLON")
-	fmt.Fprintln(w, "-----\t----\t-----\t---\t---")
+	_, _ = fmt.Fprintln(w, "ZIP\tCITY\tSTATE\tLAT\tLON")
+	_, _ = fmt.Fprintln(w, "-----\t----\t-----\t---\t---")
 	for _, e := range entries {
-		fmt.Fprintf(w, "%s\t%s\t%s (%s)\t%.4f\t%.4f\n",
+		_, _ = fmt.Fprintf(w, "%s\t%s\t%s (%s)\t%.4f\t%.4f\n",
 			e.ZipCode, e.City, e.State, e.StateCode, e.Lat, e.Lon)
 	}
-	w.Flush()
+	_ = w.Flush()
 }
