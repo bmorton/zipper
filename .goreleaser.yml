@@ -1,0 +1,32 @@
+version: 2
+
+builds:
+  - main: ./cmd/zipper
+    binary: zipper
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: "checksums.txt"
+
+release:
+  generate_release_notes: true
+  extra_files: []
+  header: |
+    Automated release for {{ .Tag }}.
+  footer: |
+    Data sourced from [GeoNames US postal codes](https://download.geonames.org/export/zip/US.zip) and [US Census ZCTA-to-Place](https://www.census.gov/geographies/reference-files/time-series/geo/relationship-files.2020.html).

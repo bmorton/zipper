@@ -9,13 +9,13 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
+      - name: Set up Go
+        uses: ./.github/actions/setup-go
 
       - name: Generate fresh data
         run: go run ./cmd/generate --output data/zipcodes.csv.gz
@@ -46,7 +46,7 @@ jobs:
           if [ -z "$LATEST" ]; then
             PATCH=0
           else
-            EXISTING_PATCH="${LATEST: -1}"
+            EXISTING_PATCH=$(echo "$LATEST" | grep -oE '[0-9]+$')
             PATCH=$((EXISTING_PATCH + 1))
           fi
 
@@ -67,15 +67,6 @@ jobs:
         run: |
           git tag "${{ steps.version.outputs.tag }}"
           git push origin main --tags
-
-      - name: Create release
-        if: steps.diff.outputs.changed == 'true'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          generate_release_notes: true
-          body: |
-            Automated data refresh from [GeoNames US postal codes](https://download.geonames.org/export/zip/US.zip) and [US Census ZCTA-to-Place](https://www.census.gov/geographies/reference-files/time-series/geo/relationship-files.2020.html).
 
       - name: No changes
         if: steps.diff.outputs.changed == 'false'
